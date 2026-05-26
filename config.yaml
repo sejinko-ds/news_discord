@@ -24,8 +24,8 @@ sites:
     max_articles: 10
 
 schedules:
-  - name: "hourly"
-    cron: "0 * * * *"
+  - name: "every-5min"
+    cron: "*/5 * * * *"
     timezone: "Asia/Seoul"
     sites: ["all"]
 
