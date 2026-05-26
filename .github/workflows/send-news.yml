@@ -1,0 +1,40 @@
+name: Send News to Discord
+
+on:
+  # schedule:
+  #   - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore DB cache
+        uses: actions/cache/restore@v4
+        with:
+          path: news_bot.db
+          key: news-db-${{ github.run_id }}
+          restore-keys: |
+            news-db-
+
+      - name: Send news
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python cli.py send-now
+
+      - name: Save DB cache
+        uses: actions/cache/save@v4
+        with:
+          path: news_bot.db
+          key: news-db-${{ github.run_id }}
