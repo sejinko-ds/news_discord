@@ -3,9 +3,9 @@ name: Send News to Discord
 on:
   schedule:
     # 월~금 06:00~08:30 KST (= UTC 21:00~23:30 전날, Sun-Thu)
-    - cron: "0,30 21-23 * * 0-4"
+    - cron: "5,35 21-23 * * 0-4"
     # 월~금 09:00~18:00 KST (= UTC 00:00~09:00, Mon-Fri)
-    - cron: "0,30 0-9 * * 1-5"
+    - cron: "5,35 0-9 * * 1-5"
   workflow_dispatch:
 
 jobs:
