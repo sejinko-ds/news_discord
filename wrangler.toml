@@ -9,4 +9,4 @@ database_name = "discord-news-db"
 database_id = ""
 
 [triggers]
-crons = ["0 21-23 * * 0-4", "30 21-23 * * 0-4", "0 0-9 * * 1-5", "30 0-8 * * 1-5"]
+crons = ["*/30 * * * *"]

@@ -175,5 +175,15 @@ async def on_fetch(request, env):
     return Response("Discord News Bot is running")
 
 
+def _is_within_schedule() -> bool:
+    from datetime import timedelta
+    now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
+    weekday = now_kst.weekday()  # 0=Mon, 6=Sun
+    hour = now_kst.hour
+    return weekday < 5 and 6 <= hour < 18
+
+
 async def on_scheduled(event, env, ctx):
+    if not _is_within_schedule():
+        return
     await run_pipeline(env)
