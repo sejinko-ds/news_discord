@@ -1,0 +1,12 @@
+name = "discord-news-bot"
+main = "src/entry.py"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["python_workers"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "discord-news-db"
+database_id = ""
+
+[triggers]
+crons = ["5,35 21-23 * * 0-4", "5,35 0-9 * * 1-5"]
