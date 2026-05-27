@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
-import httpx
+from js import fetch, Headers, Request
 
 from workers import Response
 
@@ -56,6 +56,26 @@ def _parse_date(text: str | None) -> str | None:
         return None
 
 
+async def _js_get(url: str) -> str:
+    headers = Headers.new()
+    headers.set("User-Agent", "DiscordNewsBot/1.0")
+    resp = await fetch(url, headers=headers, redirect="follow")
+    if not resp.ok:
+        raise Exception(f"HTTP {resp.status} for {url}")
+    return await resp.text()
+
+
+async def _js_post_json(url: str, data: dict):
+    headers = Headers.new()
+    headers.set("Content-Type", "application/json")
+    resp = await fetch(
+        Request.new(url, method="POST", headers=headers, body=json.dumps(data))
+    )
+    if not resp.ok:
+        text = await resp.text()
+        raise Exception(f"HTTP {resp.status}: {text}")
+
+
 def _parse_rss(root: ET.Element, max_articles: int) -> list[dict]:
     items = root.findall(".//item")[:max_articles]
     articles = []
@@ -92,11 +112,8 @@ def _parse_atom(root: ET.Element, max_articles: int) -> list[dict]:
 
 
 async def _fetch_json_api(url: str, max_articles: int) -> list[dict]:
-    async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0", "Accept-Encoding": "identity"})
-        resp.raise_for_status()
-
-    data = resp.json()
+    text = await _js_get(url)
+    data = json.loads(text)
     articles = []
     for item in data.get("results", [])[:max_articles]:
         article_url = f"https://yozm.wishket.com/magazine/detail/{item['id']}/"
@@ -113,11 +130,8 @@ async def fetch_feed(url: str, max_articles: int, feed_type: str = "rss") -> lis
     if feed_type == "json_api":
         return await _fetch_json_api(url, max_articles)
 
-    async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0", "Accept-Encoding": "identity"})
-        resp.raise_for_status()
-
-    root = ET.fromstring(resp.text)
+    text = await _js_get(url)
+    root = ET.fromstring(text)
     if root.tag == "rss" or root.find(".//item") is not None:
         return _parse_rss(root, max_articles)
     return _parse_atom(root, max_articles)
@@ -137,14 +151,9 @@ async def mark_sent(db, fp: str, source: str, url: str, title: str):
 
 
 async def send_to_discord(webhook_url: str, embeds: list[dict]):
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        for i in range(0, len(embeds), 10):
-            batch = embeds[i:i + 10]
-            await client.post(
-                webhook_url,
-                content=json.dumps({"embeds": batch}),
-                headers={"Content-Type": "application/json", "Accept-Encoding": "identity"},
-            )
+    for i in range(0, len(embeds), 10):
+        batch = embeds[i:i + 10]
+        await _js_post_json(webhook_url, {"embeds": batch})
 
 
 async def _ensure_table(db):
@@ -163,7 +172,6 @@ async def _ensure_table(db):
     await db.prepare(
         "CREATE INDEX IF NOT EXISTS idx_sent_at ON sent_articles(sent_at)"
     ).run()
-    print("[DB] Table ensured")
 
 
 async def run_pipeline(env):
@@ -221,7 +229,7 @@ async def on_fetch(request, env):
 def _is_within_schedule() -> bool:
     from datetime import timedelta
     now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
-    weekday = now_kst.weekday()  # 0=Mon, 6=Sun
+    weekday = now_kst.weekday()
     hour = now_kst.hour
     return weekday < 5 and 6 <= hour < 18
 
