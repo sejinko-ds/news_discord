@@ -93,7 +93,7 @@ def _parse_atom(root: ET.Element, max_articles: int) -> list[dict]:
 
 async def fetch_feed(url: str, max_articles: int) -> list[dict]:
     async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0"})
+        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0", "Accept-Encoding": "identity"})
         resp.raise_for_status()
 
     root = ET.fromstring(resp.text)
