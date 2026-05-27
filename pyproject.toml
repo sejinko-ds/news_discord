@@ -7,5 +7,15 @@ dependencies = [
     "httpx",
 ]
 
+[project.optional-dependencies]
+local = [
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "APScheduler>=3.10,<4.0",
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "python-dotenv>=1.0",
+]
+
 [build-system]
 requires = ["workers-py"]
