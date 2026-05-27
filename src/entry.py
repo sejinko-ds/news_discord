@@ -148,17 +148,22 @@ async def send_to_discord(webhook_url: str, embeds: list[dict]):
 
 
 async def _ensure_table(db):
-    await db.exec(
+    await db.prepare(
         "CREATE TABLE IF NOT EXISTS sent_articles ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "fingerprint TEXT NOT NULL UNIQUE,"
         "source TEXT NOT NULL,"
         "url TEXT NOT NULL,"
         "title TEXT NOT NULL,"
-        "sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
-        "CREATE INDEX IF NOT EXISTS idx_fingerprint ON sent_articles(fingerprint);"
-        "CREATE INDEX IF NOT EXISTS idx_sent_at ON sent_articles(sent_at);"
-    )
+        "sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+    ).run()
+    await db.prepare(
+        "CREATE INDEX IF NOT EXISTS idx_fingerprint ON sent_articles(fingerprint)"
+    ).run()
+    await db.prepare(
+        "CREATE INDEX IF NOT EXISTS idx_sent_at ON sent_articles(sent_at)"
+    ).run()
+    print("[DB] Table ensured")
 
 
 async def run_pipeline(env):
@@ -202,6 +207,8 @@ async def run_pipeline(env):
             for article in new_articles:
                 fp = make_fingerprint(article["url"])
                 await mark_sent(db, fp, site["key"], article["url"], article["title"])
+
+            print(f"[{site['key']}] Sent {len(new_articles)} articles, marked in DB")
 
         except Exception as e:
             print(f"[{site['key']}] Error: {e}")
