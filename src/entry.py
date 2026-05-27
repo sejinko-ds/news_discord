@@ -14,7 +14,7 @@ ATOM_NS = "http://www.w3.org/2005/Atom"
 SITES = [
     {"name": "GeekNews (Hada)", "key": "hada", "url": "https://news.hada.io/rss/news", "max_articles": 10},
     {"name": "AI Times", "key": "aitimes", "url": "https://www.aitimes.com/rss/allArticle.xml", "max_articles": 10},
-    {"name": "Yozm Wishket AI", "key": "yozm", "url": "https://yozm.wishket.com/magazine/ai/feed/", "max_articles": 10},
+    {"name": "Yozm Wishket AI", "key": "yozm", "url": "https://api.wishket.com/yozmit/news/?category=ai", "max_articles": 10, "type": "json_api"},
 ]
 
 SOURCE_COLORS = {
@@ -80,7 +80,7 @@ def _parse_atom(root: ET.Element, max_articles: int) -> list[dict]:
         title = entry.findtext(f"{{{ATOM_NS}}}title", "No Title")
         link_el = entry.find(f"{{{ATOM_NS}}}link")
         link = link_el.get("href", "") if link_el is not None else ""
-        summary = entry.findtext(f"{{{ATOM_NS}}}summary", "")
+        summary = entry.findtext(f"{{{ATOM_NS}}}summary", "") or entry.findtext(f"{{{ATOM_NS}}}content", "")
         updated = entry.findtext(f"{{{ATOM_NS}}}updated") or entry.findtext(f"{{{ATOM_NS}}}published")
         articles.append({
             "title": title,
@@ -91,7 +91,28 @@ def _parse_atom(root: ET.Element, max_articles: int) -> list[dict]:
     return articles
 
 
-async def fetch_feed(url: str, max_articles: int) -> list[dict]:
+async def _fetch_json_api(url: str, max_articles: int) -> list[dict]:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0"})
+        resp.raise_for_status()
+
+    data = resp.json()
+    articles = []
+    for item in data.get("results", [])[:max_articles]:
+        article_url = f"https://yozm.wishket.com/magazine/detail/{item['id']}/"
+        articles.append({
+            "title": item.get("title", "No Title"),
+            "url": article_url,
+            "summary": strip_html(item.get("description", "")),
+            "published_at": _parse_date(item.get("date_published")),
+        })
+    return articles
+
+
+async def fetch_feed(url: str, max_articles: int, feed_type: str = "rss") -> list[dict]:
+    if feed_type == "json_api":
+        return await _fetch_json_api(url, max_articles)
+
     async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
         resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0", "Accept-Encoding": "identity"})
         resp.raise_for_status()
@@ -141,15 +162,13 @@ async def _ensure_table(db):
 
 
 async def run_pipeline(env):
-    print(f"[DEBUG] env type: {type(env)}")
-    print(f"[DEBUG] env dir: {dir(env)}")
     webhook_url = env.DISCORD_WEBHOOK_URL
     db = env.DB
     await _ensure_table(db)
 
     for site in SITES:
         try:
-            articles = await fetch_feed(site["url"], site["max_articles"])
+            articles = await fetch_feed(site["url"], site["max_articles"], site.get("type", "rss"))
             new_articles = []
 
             for article in articles:
