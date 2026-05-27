@@ -141,6 +141,8 @@ async def _ensure_table(db):
 
 
 async def run_pipeline(env):
+    print(f"[DEBUG] env type: {type(env)}")
+    print(f"[DEBUG] env dir: {dir(env)}")
     webhook_url = env.DISCORD_WEBHOOK_URL
     db = env.DB
     await _ensure_table(db)
