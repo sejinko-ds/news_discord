@@ -1,13 +1,15 @@
 import hashlib
 import json
 import re
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from time import mktime
+from email.utils import parsedate_to_datetime
 
-import feedparser
 import httpx
 
 from workers import Response
+
+ATOM_NS = "http://www.w3.org/2005/Atom"
 
 SITES = [
     {"name": "GeekNews (Hada)", "key": "hada", "url": "https://news.hada.io/rss/news", "max_articles": 10},
@@ -41,35 +43,63 @@ def strip_html(text: str) -> str:
     return text[:197] + "..." if len(text) > 200 else text
 
 
+def _parse_date(text: str | None) -> str | None:
+    if not text:
+        return None
+    try:
+        return parsedate_to_datetime(text).astimezone(timezone.utc).isoformat()
+    except Exception:
+        pass
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc).isoformat()
+    except Exception:
+        return None
+
+
+def _parse_rss(root: ET.Element, max_articles: int) -> list[dict]:
+    items = root.findall(".//item")[:max_articles]
+    articles = []
+    for item in items:
+        title = item.findtext("title", "No Title")
+        link = item.findtext("link", "")
+        desc = item.findtext("description", "")
+        pub = item.findtext("pubDate")
+        articles.append({
+            "title": title,
+            "url": link.strip(),
+            "summary": strip_html(desc),
+            "published_at": _parse_date(pub),
+        })
+    return articles
+
+
+def _parse_atom(root: ET.Element, max_articles: int) -> list[dict]:
+    entries = root.findall(f"{{{ATOM_NS}}}entry")[:max_articles]
+    articles = []
+    for entry in entries:
+        title = entry.findtext(f"{{{ATOM_NS}}}title", "No Title")
+        link_el = entry.find(f"{{{ATOM_NS}}}link")
+        link = link_el.get("href", "") if link_el is not None else ""
+        summary = entry.findtext(f"{{{ATOM_NS}}}summary", "")
+        updated = entry.findtext(f"{{{ATOM_NS}}}updated") or entry.findtext(f"{{{ATOM_NS}}}published")
+        articles.append({
+            "title": title,
+            "url": link.strip(),
+            "summary": strip_html(summary),
+            "published_at": _parse_date(updated),
+        })
+    return articles
+
+
 async def fetch_feed(url: str, max_articles: int) -> list[dict]:
     async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
         resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0"})
         resp.raise_for_status()
 
-    feed = feedparser.parse(resp.text)
-    articles = []
-    for entry in feed.entries[:max_articles]:
-        published = None
-        for date_field in ("published_parsed", "updated_parsed"):
-            parsed = getattr(entry, date_field, None)
-            if parsed:
-                published = datetime.fromtimestamp(mktime(parsed), tz=timezone.utc).isoformat()
-                break
-
-        link = entry.get("link", "")
-        if isinstance(link, dict):
-            link = link.get("href", "")
-
-        summary = entry.get("summary", entry.get("description", ""))
-        summary = strip_html(summary)
-
-        articles.append({
-            "title": entry.get("title", "No Title"),
-            "url": link,
-            "summary": summary,
-            "published_at": published,
-        })
-    return articles
+    root = ET.fromstring(resp.text)
+    if root.tag == "rss" or root.find(".//item") is not None:
+        return _parse_rss(root, max_articles)
+    return _parse_atom(root, max_articles)
 
 
 async def is_sent(db, fp: str) -> bool:
