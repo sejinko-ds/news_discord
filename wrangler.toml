@@ -1,4 +1,4 @@
-name = "discord-news-bot"
+name = "news-discord"
 main = "src/entry.py"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["python_workers"]
