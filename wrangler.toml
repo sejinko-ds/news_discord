@@ -8,5 +8,12 @@ binding = "DB"
 database_name = "discord-news-db"
 database_id = ""
 
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 [triggers]
 crons = ["*/30 * * * *"]
