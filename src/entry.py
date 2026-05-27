@@ -93,7 +93,7 @@ def _parse_atom(root: ET.Element, max_articles: int) -> list[dict]:
 
 async def _fetch_json_api(url: str, max_articles: int) -> list[dict]:
     async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0"})
+        resp = await client.get(url, headers={"User-Agent": "DiscordNewsBot/1.0", "Accept-Encoding": "identity"})
         resp.raise_for_status()
 
     data = resp.json()
@@ -143,7 +143,7 @@ async def send_to_discord(webhook_url: str, embeds: list[dict]):
             await client.post(
                 webhook_url,
                 content=json.dumps({"embeds": batch}),
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json", "Accept-Encoding": "identity"},
             )
 
 
