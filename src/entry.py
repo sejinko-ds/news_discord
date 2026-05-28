@@ -12,9 +12,9 @@ from workers import Response
 ATOM_NS = "http://www.w3.org/2005/Atom"
 
 SITES = [
-    {"name": "GeekNews (Hada)", "key": "hada", "url": "https://news.hada.io/rss/news", "max_articles": 10},
-    {"name": "AI Times", "key": "aitimes", "url": "https://www.aitimes.com/rss/allArticle.xml", "max_articles": 10},
-    {"name": "Yozm Wishket AI", "key": "yozm", "url": "https://api.wishket.com/yozmit/news/?category=ai", "max_articles": 10, "type": "json_api"},
+    {"name": "GeekNews (Hada)", "key": "hada", "url": "https://news.hada.io/rss/news", "max_articles": 30},
+    {"name": "AI Times", "key": "aitimes", "url": "https://www.aitimes.com/rss/allArticle.xml", "max_articles": 30},
+    {"name": "Yozm Wishket AI", "key": "yozm", "url": "https://api.wishket.com/yozmit/news/?category=ai", "max_articles": 30, "type": "json_api"},
 ]
 
 SOURCE_COLORS = {
@@ -174,10 +174,17 @@ async def _ensure_table(db):
     ).run()
 
 
+async def _cleanup_old_records(db, days: int = 30):
+    await db.prepare(
+        f"DELETE FROM sent_articles WHERE sent_at < datetime('now', '-{days} days')"
+    ).run()
+
+
 async def run_pipeline(env):
     webhook_url = env.DISCORD_WEBHOOK_URL
     db = env.DB
     await _ensure_table(db)
+    await _cleanup_old_records(db)
 
     for site in SITES:
         try:
