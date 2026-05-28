@@ -181,6 +181,7 @@ async def _cleanup_old_records(db, days: int = 30):
 
 
 async def run_pipeline(env):
+    print("[pipeline] started")
     webhook_url = env.DISCORD_WEBHOOK_URL
     db = env.DB
     await _ensure_table(db)
@@ -197,6 +198,7 @@ async def run_pipeline(env):
                     new_articles.append(article)
 
             if not new_articles:
+                print(f"[{site['key']}] No new articles")
                 continue
 
             color = SOURCE_COLORS.get(site["key"], DEFAULT_COLOR)
