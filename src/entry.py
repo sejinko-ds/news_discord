@@ -15,12 +15,18 @@ SITES = [
     {"name": "GeekNews (Hada)", "key": "hada", "url": "https://news.hada.io/rss/news", "max_articles": 30},
     {"name": "AI Times", "key": "aitimes", "url": "https://www.aitimes.com/rss/allArticle.xml", "max_articles": 30},
     {"name": "Yozm Wishket AI", "key": "yozm", "url": "https://api.wishket.com/yozmit/news/?category=ai", "max_articles": 30, "type": "json_api"},
+    {"name": "Anthropic News", "key": "anthropic_news", "url": "https://rsshub.app/anthropic/news", "max_articles": 30},
+    {"name": "Anthropic Engineering", "key": "anthropic_engineering", "url": "https://rsshub.app/anthropic/engineering", "max_articles": 30},
+    {"name": "Anthropic Research", "key": "anthropic_research", "url": "https://rsshub.app/anthropic/research", "max_articles": 30},
 ]
 
 SOURCE_COLORS = {
     "hada": 0xFF6600,
     "aitimes": 0x2196F3,
     "yozm": 0x4CAF50,
+    "anthropic_news": 0xFF8C00,
+    "anthropic_engineering": 0xFF8C00,
+    "anthropic_research": 0xFF8C00,
 }
 DEFAULT_COLOR = 0x3498DB
 
@@ -28,6 +34,9 @@ SOURCE_LOGOS = {
     "hada": "https://news.hada.io/apple-touch-icon.png",
     "aitimes": "https://cdn.aitimes.com/image/logo/toplogo3.png",
     "yozm": "https://media.wishket.com/images/yozm/og_default.png",
+    "anthropic_news": "https://www.anthropic.com/images/icons/apple-touch-icon.png",
+    "anthropic_engineering": "https://www.anthropic.com/images/icons/apple-touch-icon.png",
+    "anthropic_research": "https://www.anthropic.com/images/icons/apple-touch-icon.png",
 }
 
 HTML_TAG_RE = re.compile(r"<[^>]+>")
