@@ -245,11 +245,7 @@ async def on_fetch(request, env):
 
 
 def _is_within_schedule() -> bool:
-    from datetime import timedelta
-    now_kst = datetime.now(timezone.utc) + timedelta(hours=9)
-    weekday = now_kst.weekday()
-    hour = now_kst.hour
-    return weekday < 5 and 6 <= hour < 18
+    return True
 
 
 async def on_scheduled(event, env, ctx):
