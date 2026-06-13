@@ -16,4 +16,4 @@ enabled = true
 invocation_logs = true
 
 [triggers]
-crons = ["49 21 * * *"]
+crons = ["0 22 * * *"]

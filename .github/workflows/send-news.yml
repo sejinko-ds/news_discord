@@ -2,7 +2,7 @@ name: Send News to Discord
 
 on:
   schedule:
-    - cron: "49 21 * * *"
+    - cron: "0 22 * * *"
   workflow_dispatch:
 
 jobs:
