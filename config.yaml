@@ -26,21 +26,21 @@ sites:
   - name: "Anthropic News"
     key: "anthropic_news"
     type: "rss"
-    url: "https://rsshub.app/anthropic/news"
+    url: "https://rsshub.rssforever.com/anthropic/news"
     enabled: true
     max_articles: 30
 
   - name: "Anthropic Engineering"
     key: "anthropic_engineering"
     type: "rss"
-    url: "https://rsshub.app/anthropic/engineering"
+    url: "https://rsshub.rssforever.com/anthropic/engineering"
     enabled: true
     max_articles: 30
 
   - name: "Anthropic Research"
     key: "anthropic_research"
     type: "rss"
-    url: "https://rsshub.app/anthropic/research"
+    url: "https://rsshub.rssforever.com/anthropic/research"
     enabled: true
     max_articles: 30
 

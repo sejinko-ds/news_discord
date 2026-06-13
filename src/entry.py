@@ -15,9 +15,9 @@ SITES = [
     {"name": "GeekNews (Hada)", "key": "hada", "url": "https://news.hada.io/rss/news", "max_articles": 30},
     {"name": "AI Times", "key": "aitimes", "url": "https://www.aitimes.com/rss/allArticle.xml", "max_articles": 30},
     {"name": "Yozm Wishket AI", "key": "yozm", "url": "https://api.wishket.com/yozmit/news/?category=ai", "max_articles": 30, "type": "json_api"},
-    {"name": "Anthropic News", "key": "anthropic_news", "url": "https://rsshub.app/anthropic/news", "max_articles": 30},
-    {"name": "Anthropic Engineering", "key": "anthropic_engineering", "url": "https://rsshub.app/anthropic/engineering", "max_articles": 30},
-    {"name": "Anthropic Research", "key": "anthropic_research", "url": "https://rsshub.app/anthropic/research", "max_articles": 30},
+    {"name": "Anthropic News", "key": "anthropic_news", "url": "https://rsshub.rssforever.com/anthropic/news", "max_articles": 30},
+    {"name": "Anthropic Engineering", "key": "anthropic_engineering", "url": "https://rsshub.rssforever.com/anthropic/engineering", "max_articles": 30},
+    {"name": "Anthropic Research", "key": "anthropic_research", "url": "https://rsshub.rssforever.com/anthropic/research", "max_articles": 30},
 ]
 
 SOURCE_COLORS = {
